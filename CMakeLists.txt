@@ -15,7 +15,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(threepp)
 
-add_executable(bilsimulator main.cpp)
+add_executable(bilsimulator src/main.cpp
+        src/world.cpp
+        src/car.cpp
+        src/physics.cpp
+        src/collision.cpp
+        src/pickup.cpp
+        src/ui.cpp
+)
 target_link_libraries(bilsimulator PRIVATE threepp::threepp)
 
 
