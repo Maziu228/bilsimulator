@@ -1,20 +1,35 @@
 #include <threepp/threepp.hpp>
 #include <iostream>
 #include <threepp/canvas/Monitor.hpp>
+#include <threepp/loaders/OBJLoader.hpp>
+#include "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreAudio.framework/Headers/AudioHardware.h"
 
 using namespace threepp;
 
 class Car: public Object3D, public KeyListener {
 
 public:
-    //create car
+    // debug box
     Car() {
-        auto boxGeometry = BoxGeometry::create(1, 1, 1);
-        auto boxMaterial = MeshBasicMaterial::create();
-        boxMaterial->color = Color::red;
-        auto boxMesh = Mesh::create(boxGeometry, boxMaterial);
-        this->add(boxMesh);
+        {
+            auto boxGeometry = BoxGeometry::create(1, 1, 1);
+            auto boxMaterial = MeshBasicMaterial::create();
+            boxMaterial->color = Color::red;
+            auto boxMesh = Mesh::create(boxGeometry, boxMaterial);
+            this->add(boxMesh);
+        }
+        // real model
+        { OBJLoader loader;
+            auto carModel = loader.load("assets/cars/test/free_car_001.obj");
+            carModel->scale.set(1, 1, 1);
+            carModel->position.set(0, -0.5, 0);
+            carModel->rotation.y = threepp::math::degToRad(90);
+            this->add(carModel);
+        }
+
+
     }
+
     // create key event handlers
     void onKeyPressed(KeyEvent evt) override {
         if (evt.key == Key::W) isWPressed = true;
@@ -59,7 +74,7 @@ public:
         // turning
         const float wheelbase = 2.5;
         float maxSteer = 0.6;
-        if (currentSpeed > maxSteer*40) maxSteer = maxSteer/3; // less steering at high speed
+        if (currentSpeed > maxSteer*40) maxSteer = maxSteer/2; // less steering at high speed
         const float turningRadius = std::tan(steerIn*maxSteer)/wheelbase;
         const float v = currentSpeed; // units per second
 
@@ -76,6 +91,11 @@ public:
     void setA(bool down) { isAPressed = down; }
     void setD(bool down) { isDPressed = down; }
 
+    bool steeringRight() const { return isDPressed; }
+    bool steeringLeft()  const { return isAPressed; }
+
+
+
 private:
     // car state and parameters
     float currentSpeed = 0;
@@ -87,6 +107,7 @@ private:
     bool isSPressed = false;
     bool isAPressed = false;
     bool isDPressed = false;
+
 };
 
 int main() {
@@ -100,8 +121,6 @@ int main() {
     Scene scene;
     scene.background = Color::lightgray;
     PerspectiveCamera camera(75, canvas.aspect(), 0.1f, 1000.f);
-    camera.position.set(0,8,-12);
-    camera.lookAt({0,0,0});
 
 // add ground in form of grid
     auto grid = GridHelper::create(200, 200);
@@ -115,11 +134,26 @@ int main() {
 // connect keylistener to car
     canvas.addKeyListener(car);
 
+    // add lights
+    auto ambient = AmbientLight::create(Color::lightyellow, 0.4f);  // soft overall light
+    scene.add(ambient);
+
+    auto dirLight = DirectionalLight::create(Color::lightyellow, 1.0f);
+    dirLight->position.set(10, 20, 10);
+    scene.add(dirLight);
+
     Clock clock;
     canvas.animate([&]{
         float dt = clock.getDelta();
-
         car.update(dt);
+
+        camera.position.set(car.position.x - 5 * std::cos(car.rotation.y),
+                            car.position.y + 3,
+                            car.position.z + 5  * std::sin(car.rotation.y));
+        camera.lookAt(car.position);
+
+
         renderer.render(scene, camera);
     });
+
 }

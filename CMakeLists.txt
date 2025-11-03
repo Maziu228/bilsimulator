@@ -17,4 +17,11 @@ FetchContent_MakeAvailable(threepp)
 add_executable(bilsimulator src/application.cpp)
 target_link_libraries(bilsimulator PUBLIC threepp::threepp)
 
+add_custom_command(
+        TARGET bilsimulator POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/assets
+        ${CMAKE_BINARY_DIR}/assets
+)
+
 
