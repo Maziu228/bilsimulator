@@ -1,8 +1,10 @@
-//
-// Created by Maziu on 04/11/2025.
-//
+#pragma once
+#include <threepp/threepp.hpp>
 
-#ifndef BILSIMULATOR_WORLD_H
-#define BILSIMULATOR_WORLD_H
+class World : public threepp::Object3D {
+public:
+    World();
 
-#endif //BILSIMULATOR_WORLD_H
+private:
+    void createRoad();
+};
