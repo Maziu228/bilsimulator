@@ -4,8 +4,6 @@
 #include <iostream>
 #include <memory>
 
-
-
 World::World() {
     threepp::OBJLoader loader;
     auto road = loader.load("assets/objects/road/RoadNetwork3.obj");
@@ -116,9 +114,6 @@ World::World() {
             pu.visual = mesh.get();
             powerUps_.push_back(pu);
         }
-
-
-
 
         // check the size of the road model (debug)
         threepp::Box3 box;

@@ -1,71 +1,62 @@
 #include <threepp/threepp.hpp>
 #include <threepp/canvas/Monitor.hpp>
-#include <threepp/loaders/OBJLoader.hpp>
+#include <cmath>
+#include <functional>
 
+// Headers
 #include "car.h"
 #include "world.h"
 
-// ImGui
+// Imgui
 #include "imgui.h"
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-
-#include <functional>
-
-// threepp uses GLFW under the hood
 #include <GLFW/glfw3.h>
 
 using namespace threepp;
 
 int main() {
 
-    // --- threepp setup ---
     Canvas canvas("Bilsimulator");
     GLRenderer renderer(canvas.size());
     renderer.setPixelRatio(monitor::contentScale().first);
 
-    // ---------- ImGui initialization ----------
+    // Imgui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
 
-    // get underlying GLFW window from threepp::Canvas
     auto* window = static_cast<GLFWwindow*>(canvas.windowPtr());
 
-    ImGui_ImplGlfw_InitForOpenGL(window, /*install_callbacks=*/true);
-    ImGui_ImplOpenGL3_Init("#version 150"); // good on macOS
+    ImGui_ImplGlfw_InitForOpenGL(window,true);
+    ImGui_ImplOpenGL3_Init("#version 150");
 
-    // --- scene & camera ---
     Scene scene;
     scene.background = Color::lightgray;
     PerspectiveCamera camera(75, canvas.aspect(), 0.1f, 1000.f);
 
-    // ----------------------------------------------------
-    //  CAR + WORLD
-    // ----------------------------------------------------
     Car car;
-
-    // starting transform (for restart)
-    Vector3 startPos(-80, 0, 46.6);
+    Vector3 startPos(-80, 0, 46.6); // Start position
     float   startYaw = 0.f;
 
-    car.position.copy(startPos);
+    car.position.copy(startPos); // Restart position
     car.rotation.y = startYaw;
 
     scene.add(car);
-    canvas.addKeyListener(car); // WASD
+    canvas.addKeyListener(car);
 
     World world;
     scene.add(world);
 
+    // Reset
     auto resetGame = [&]() {
-        // reset car
+        // resets car
         car.position.copy(startPos);
         car.rotation.y = startYaw;
         car.resetState();
 
-        // reset all powerups in the world
+        // Resets all powerups in the world
         auto& powerUps = world.getPowerUps();
         for (auto& pu : powerUps) {
             pu.collected = false;
@@ -73,7 +64,7 @@ int main() {
             if (pu.visual) {
                 pu.visual->visible = true;
 
-                // rebuild its trigger box (optional but safe)
+                // Rebuild trigger box
                 threepp::Box3 box;
                 box.setFromObject(*pu.visual);
                 pu.box = box;
@@ -81,9 +72,7 @@ int main() {
         }
     };
 
-    // ----------------------------------------------------
-    //  LIGHTS
-    // ----------------------------------------------------
+    // Lights
     auto ambient = AmbientLight::create(Color(0xfff2e0), 0.6f);
     auto directional = DirectionalLight::create(Color(0xffe4b5), 1.2f);
     directional->position.set(10, 15, 10);
@@ -95,9 +84,7 @@ int main() {
     scene.add(directional);
     scene.add(fill);
 
-    // ----------------------------------------------------
-    //  RESTART LISTENER (R key)
-    // ----------------------------------------------------
+    // Restart listener
     struct RestartListener : KeyListener {
         std::function<void()> resetGame;
 
@@ -115,31 +102,18 @@ int main() {
     canvas.addKeyListener(restartListener);
 
 
-    // ----------------------------------------------------
-    //  CAMERA FOLLOW STATE
-    // ----------------------------------------------------
+    // Camera state
     float camYawOffset = 0.f;
-
-    // ----------------------------------------------------
-    //  CLOCK
-    // ----------------------------------------------------
     Clock clock;
 
-    // ----------------------------------------------------
-    //  MAIN LOOP
-    // ----------------------------------------------------
+    // Main loop
     canvas.animate([&] {
         float dt = clock.getDelta();
 
-        // -----------------------------
-        //   CAR UPDATE
-        // -----------------------------
         Vector3 oldPos = car.position;
         car.update(dt);
 
-        // -----------------------------
-        //   AABB COLLISION (WORLD)
-        // -----------------------------
+        // AABB collision
         {
             Box3 carBox = car.getBoundingBox();
             const auto& colliders = world.getColliders();
@@ -152,9 +126,7 @@ int main() {
             }
         }
 
-        // -----------------------------
-        //   POWERUPS
-        // -----------------------------
+        // Power ups
         {
             Box3 carBox = car.getBoundingBox();
             auto& powerUps = world.getPowerUps();
@@ -179,14 +151,12 @@ int main() {
             }
         }
 
-        // -----------------------------
-        //   CAMERA FOLLOW + STEERING OFFSET
-        // -----------------------------
+        // Following camera
         float steerDir = 0.0f;
         if (car.steeringLeft())  steerDir += 1.0f;
         if (car.steeringRight()) steerDir -= 1.0f;
 
-        float targetOffset = steerDir * 0.45f; // yaw offset in radians
+        float targetOffset = steerDir * 0.45f;
         float followSpeed  = 1.5f;
         camYawOffset += (targetOffset - camYawOffset) * followSpeed * dt;
 
@@ -210,13 +180,11 @@ int main() {
 
         camera.lookAt(lookTarget);
 
-        // -----------------------------
-        //   IMGUI FRAME BEGIN
-        // -----------------------------
+        // Imgui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
 
-        // make sure DisplaySize is valid
+        // Display size check
         {
             auto s = canvas.size();
             ImGuiIO& io2 = ImGui::GetIO();
@@ -229,9 +197,7 @@ int main() {
 
         ImGui::NewFrame();
 
-        // -----------------------------
-        //   HUD WINDOW
-        // -----------------------------
+        // HUD window
         ImGuiWindowFlags flags =
                 ImGuiWindowFlags_NoTitleBar |
                 ImGuiWindowFlags_NoResize   |
@@ -244,17 +210,17 @@ int main() {
 
         ImGui::Begin("HUD", nullptr, flags);
 
-        // --- Speedometer ---
+        // Speedometer
         float speed = car.getSpeedAbs();
         ImGui::Text("Speed: %.1f", speed);
 
-        float maxSpeedVis = 50.f; // adjust to your game
+        float maxSpeedVis = 50.f;
         float norm = std::min(speed / maxSpeedVis, 1.0f);
         ImGui::ProgressBar(norm, ImVec2(150, 0), "");
 
         ImGui::Separator();
 
-        // --- Power-up indicator ---
+        // Powerup indicator
         if (car.hasSpeedBoost()) {
             ImGui::Text("Power-up: SPEED x%.1f", car.getSpeedMultiplier());
         } else if (car.hasSizeBoost()) {
@@ -265,24 +231,21 @@ int main() {
 
         ImGui::Separator();
 
-        // --- Restart button ---
+        // Reset button
         if (ImGui::Button("Restart (R)")) {
     resetGame();
 }
 
-
         ImGui::End();
 
-        // -----------------------------
-        //   RENDER 3D + IMGUI
-        // -----------------------------
+        // Render
         renderer.render(scene, camera);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     });
 
-    // ---------- ImGui shutdown ----------
+    // Imgui quit
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

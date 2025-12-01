@@ -27,9 +27,9 @@ public:
 
     threepp::Box3 getBoundingBox() const;
 
-    // --- UI helpers ---
-    float getSpeed() const { return currentSpeed; }                 // signed
-    float getSpeedAbs() const { return std::abs(currentSpeed); }    // always +
+    // Ui helpers
+    float getSpeed() const { return currentSpeed; }
+    float getSpeedAbs() const { return std::abs(currentSpeed); }
     bool hasSpeedBoost() const { return speedBoostTime > 0.f; }
     bool hasSizeBoost()  const { return sizeBoostTime  > 0.f; }
     float getSpeedMultiplier() const { return speedMultiplier; }

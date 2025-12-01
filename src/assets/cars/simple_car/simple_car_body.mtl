@@ -9,7 +9,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd /Users/maziu/Desktop/backupcar/Color_Texture_FREE.png
+map_Kd Color_Texture_FREE.png
 
 newmtl WINDOW
 Ns 324.000031

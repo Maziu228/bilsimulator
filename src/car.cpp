@@ -14,17 +14,17 @@ Car::Car() {
     carBody->rotation.y = threepp::math::degToRad(90);
     this->add(carBody);
 
-    // Wheel model clonned 4 times
+    // Wheel model cloned 4 times
     auto wheelModel = loader.load("assets/cars/simple_car/simple_car_wheels3.obj");
     wheelModel->scale.set(1, 1, 1);
    wheelModel->rotation.y = threepp::math::degToRad(90);
 
     // Wheels adjustments
     threepp::Vector3 wheelOffsets[4] = {
-        { 0.9f, -0.1f,  1.1f },  // front-left
-        {-0.9f, -0.1f,  1.1f },  // front-right
-        { 0.9f, -0.1f, -1.1f },  // back-left
-        {-0.9f, -0.1f, -1.1f },  // back-right
+        { 0.9f, -0.1f,  1.1f },  // front left
+        {-0.9f, -0.1f,  1.1f },  // front right
+        { 0.9f, -0.1f, -1.1f },  // back left
+        {-0.9f, -0.1f, -1.1f },  // back right
     };
 
     for (auto& o : wheelOffsets) {
@@ -202,6 +202,6 @@ void Car::resetState() {
     sizeMultiplier  = 1.f;
     sizeBoostTime   = 0.f;
 
-    this->scale.set(1.f, 1.f, 1.f); // remove size boost
+    this->scale.set(1.f, 1.f, 1.f); // removes size boost
 }
 
