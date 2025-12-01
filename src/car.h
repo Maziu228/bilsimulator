@@ -1,7 +1,6 @@
 #pragma once
 #include <threepp/threepp.hpp>
-#include "btBulletDynamicsCommon.h"
-#include "physics.h"
+
 
 class Car : public threepp::Object3D, public threepp::KeyListener {
 public:
@@ -9,6 +8,10 @@ public:
     // input handlers
     void onKeyPressed(threepp::KeyEvent evt) override;
     void onKeyReleased(threepp::KeyEvent evt) override;
+
+    void applySpeedBoost(float factor, float duration);
+    void applySizeBoost(float factor, float duration);
+
 
     // update every frame
     void update(float dt);
@@ -22,6 +25,8 @@ public:
     bool steeringRight() const;
     bool steeringLeft() const;
 
+    threepp::Box3 getBoundingBox() const;
+
 private:
     // car state and parameters
     float currentSpeed      = 0.f;
@@ -34,4 +39,17 @@ private:
     bool isSPressed = false;
     bool isAPressed = false;
     bool isDPressed = false;
+
+    // car collider box
+    threepp::Vector3 halfExtents {1.f, 0.5f, 2.f};
+
+    // powerup state
+    float speedMultiplier = 1.f;
+    float speedBoostTime  = 0.f;
+
+    float sizeMultiplier  = 1.f;
+    float sizeBoostTime   = 0.f;
+
+    std::vector<threepp::Object3D*> wheels_;
+    float wheelRotation_ = 0.f;
 };

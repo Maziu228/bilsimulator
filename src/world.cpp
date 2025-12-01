@@ -3,36 +3,102 @@
 #include <threepp/loaders/OBJLoader.hpp>
 #include <iostream>
 
-#include "../cmake-build-debug/_deps/threepp-src/include/threepp/loaders/OBJLoader.hpp"
-#include "threepp/extras/curves/LineCurve.hpp"
 
 World::World() {
     threepp::OBJLoader loader;
     auto road = loader.load("assets/objects/road/RoadNetwork3.obj");
     auto house = loader.load("assets/objects/buildings/HouseLowPoly2.obj");
+    auto finish = loader.load ("assets/objects/misc/finishLine.obj");
+    auto barrier = loader.load("assets/objects/misc/Barrier.obj");
+
     auto geometry = threepp::BoxGeometry::create(400, 5, 400);
     auto material = threepp::MeshStandardMaterial::create();
+
     material->color = threepp::Color(0xCF9E7C);
-    auto cube = threepp::Mesh::create(geometry, material);
-    cube->position.set(0, -3, 0);
+    auto ground = threepp::Mesh::create(geometry, material);
+
+    ground->position.set(0, -3, 0);
     house->scale.set(0.3, 0.3, 0.3);
     house->position.set(10, -0.6, -10);
-    this->add(cube);
-    this->add(house);
+    finish->scale.set(1.5, 1.5, 1.5);
+    finish->position.set(-60, -0.5, 46.6);
+    finish->rotation.y= threepp::math::degToRad(90);
+    barrier->scale.set(2, 2, 2);
+    road->scale.set(0.65, 0.65, 0.65);
+    road->position.set(-15, -0.4, 0);
 
-    // check the size of the model (debug)
+    this->add(road);
+    this->add(ground);
+    this->add(house);
+    this->add(finish);
+
+    // Custom collider for house
+    threepp::Box3 houseBox(
+    threepp::Vector3(4, -1, -13),
+    threepp::Vector3(16, 3, -7)
+);
+    colliders_.push_back(houseBox);
+
+    // Barricade placements: position + rotation
+    struct BarricadeInfo {
+        threepp::Vector3 pos;
+        float yawDeg;
+    };
+
+    std::vector<BarricadeInfo> barricades = {
+        //  x      y   z       yaw
+        { threepp::Vector3(70, 0.f, 46),   0 },
+        { threepp::Vector3(167, 0.f, 4),  60 },
+        { threepp::Vector3(82, 0.f, 120),  95 },
+        { threepp::Vector3(0, 0.f, 140), 90},
+        { threepp::Vector3(-117, 0.f, 140), 90},
+        { threepp::Vector3(-15, 0.f, -20), 90},
+    };
+
+    for (const auto& info : barricades) {
+        // clone visual model
+        auto b = barrier->clone();
+        b->position.copy(info.pos);
+        b->rotation.y = threepp::math::degToRad(info.yawDeg);
+
+        this->add(b);
+
+        // colliders for barricades
+        threepp::Box3 box;
+        box.setFromObject(*b);
+        colliders_.push_back(box);
+    }
+
+    // Power ups
+    {
+        // visual mesh
+        auto sphereGeo = threepp::SphereGeometry::create(0.7f, 16, 16);
+        auto sphereMat = threepp::MeshStandardMaterial::create();
+        sphereMat->color = threepp::Color(0xffff00);
+        auto sphereMesh = threepp::Mesh::create(sphereGeo, sphereMat);
+
+        // position
+        sphereMesh->position.set(-13, 1, -5);
+        this->add(sphereMesh);
+
+        // AABB for trigger
+        threepp::Box3 box;
+        box.setFromObject(*sphereMesh);
+
+        PowerUp pu;
+        pu.type     = PowerUp::Type::SpeedX2;
+        pu.box      = box;
+        pu.visual   = sphereMesh.get();
+        powerUps_.push_back(pu);
+    }
+
+
+    // check the size of the road model (debug)
     threepp::Box3 box;
     box.setFromObject(*road);
     threepp::Vector3 size;
     box.getSize(size);
     std::cout << "Road model size (x, y, z): "
               << size.x << ", " << size.y << ", " << size.z << std::endl;
-
-
-    road->scale.set(0.65, 0.65, 0.65);
-    road->position.set(-15, -0.4, 0);
-
-
-
-    this->add(road);
 }
+

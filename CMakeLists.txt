@@ -14,7 +14,6 @@ FetchContent_Declare(
         GIT_TAG b61aa93bb7fb6f9f4b7e89f237c96efc282bab10
 )
 FetchContent_MakeAvailable(threepp)
-add_subdirectory(external/bullet3)
 
 add_executable(bilsimulator
         src/application.cpp
@@ -23,13 +22,7 @@ add_executable(bilsimulator
 )
 target_link_libraries(bilsimulator PUBLIC
         threepp
-        BulletDynamics
-        BulletCollision
-        LinearMath)
-
-target_include_directories(bilsimulator
-        PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/external/bullet3/src)
+        )
 
 
 add_custom_command(
