@@ -2,6 +2,8 @@
 #include <threepp/threepp.hpp>
 #include <threepp/loaders/OBJLoader.hpp>
 #include <iostream>
+#include <memory>
+
 
 
 World::World() {
@@ -72,33 +74,58 @@ World::World() {
     // Power ups
     {
         // visual mesh
-        auto sphereGeo = threepp::SphereGeometry::create(0.7f, 16, 16);
-        auto sphereMat = threepp::MeshStandardMaterial::create();
-        sphereMat->color = threepp::Color(0xffff00);
-        auto sphereMesh = threepp::Mesh::create(sphereGeo, sphereMat);
+        auto speedGeo = threepp::SphereGeometry::create(0.7f, 16, 16);
+        auto speedMat = threepp::MeshStandardMaterial::create();
+        speedMat->color = threepp::Color(0xffff00);
 
-        // position
-        sphereMesh->position.set(-13, 1, -5);
-        this->add(sphereMesh);
+        auto sizeGeo = threepp::SphereGeometry::create(0.7, 16, 16);
+        auto sizeMat = threepp::MeshStandardMaterial::create();
+        sizeMat->color = threepp::Color(0x00ffff);
 
-        // AABB for trigger
+        struct PowerUpInfo {
+            threepp::Vector3 pos;
+            PowerUp::Type type;
+        };
+        std::vector<PowerUpInfo> infos = {
+            { threepp::Vector3(-13.f, 1.f,  -5.f), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3( 80, 1.f, 90), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3( -100, 1.f,80), PowerUp::Type::SpeedX2 },
+
+            { threepp::Vector3(80, 1.f,  40.f), PowerUp::Type::SizeX2 },
+            { threepp::Vector3( -65 , 1.f,  120), PowerUp::Type::SizeX2 },
+        };
+
+        for (const auto& info : infos) {
+            std::shared_ptr<threepp::Mesh> mesh;
+
+            if (info.type == PowerUp::Type::SpeedX2) {
+                mesh = threepp::Mesh::create(speedGeo, speedMat);
+            } else { // SizeX2
+                mesh = threepp::Mesh::create(sizeGeo, sizeMat);
+            }
+
+            mesh->position.copy(info.pos);
+            this->add(mesh);
+
+            threepp::Box3 box;
+            box.setFromObject(*mesh);
+
+            PowerUp pu;
+            pu.type   = info.type;
+            pu.box    = box;
+            pu.visual = mesh.get();
+            powerUps_.push_back(pu);
+        }
+
+
+
+
+        // check the size of the road model (debug)
         threepp::Box3 box;
-        box.setFromObject(*sphereMesh);
-
-        PowerUp pu;
-        pu.type     = PowerUp::Type::SpeedX2;
-        pu.box      = box;
-        pu.visual   = sphereMesh.get();
-        powerUps_.push_back(pu);
+        box.setFromObject(*road);
+        threepp::Vector3 size;
+        box.getSize(size);
+        std::cout << "Road model size (x, y, z): "
+                  << size.x << ", " << size.y << ", " << size.z << std::endl;
     }
-
-
-    // check the size of the road model (debug)
-    threepp::Box3 box;
-    box.setFromObject(*road);
-    threepp::Vector3 size;
-    box.getSize(size);
-    std::cout << "Road model size (x, y, z): "
-              << size.x << ", " << size.y << ", " << size.z << std::endl;
 }
-

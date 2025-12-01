@@ -192,3 +192,16 @@ void Car::applySizeBoost(float factor, float duration) {
     sizeBoostTime  = duration;
     this->scale.set(factor, factor, factor);
 }
+
+void Car::resetState() {
+    currentSpeed    = 0.f;
+
+    speedMultiplier = 1.f;
+    speedBoostTime  = 0.f;
+
+    sizeMultiplier  = 1.f;
+    sizeBoostTime   = 0.f;
+
+    this->scale.set(1.f, 1.f, 1.f); // remove size boost
+}
+

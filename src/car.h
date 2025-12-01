@@ -27,6 +27,18 @@ public:
 
     threepp::Box3 getBoundingBox() const;
 
+    // --- UI helpers ---
+    float getSpeed() const { return currentSpeed; }                 // signed
+    float getSpeedAbs() const { return std::abs(currentSpeed); }    // always +
+    bool hasSpeedBoost() const { return speedBoostTime > 0.f; }
+    bool hasSizeBoost()  const { return sizeBoostTime  > 0.f; }
+    float getSpeedMultiplier() const { return speedMultiplier; }
+    float getSizeMultiplier()  const { return sizeMultiplier; }
+
+    // Reset car state (for restart)
+    void resetState();
+
+
 private:
     // car state and parameters
     float currentSpeed      = 0.f;

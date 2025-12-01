@@ -1,108 +1,195 @@
-    #include <threepp/threepp.hpp>
-    #include <iostream>
-    #include <threepp/canvas/Monitor.hpp>
-    #include "car.h"
-    #include "world.h"
-    #include "../../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/CoreAudio.framework/Headers/AudioHardware.h"
+#include <threepp/threepp.hpp>
+#include <threepp/canvas/Monitor.hpp>
+#include <threepp/loaders/OBJLoader.hpp>
 
-    using namespace threepp;
+#include "car.h"
+#include "world.h"
 
-    int main() {
-        Canvas canvas ("Separation of Concerns");
-        GLRenderer renderer(canvas.size());
+// ImGui
+#include "imgui.h"
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
-        // center picture in the window
-        renderer.setPixelRatio(monitor::contentScale().first);
+#include <functional>
 
-        // scene
-        Scene scene;
-        scene.background = Color::lightgray;
-        PerspectiveCamera camera(75, canvas.aspect(), 0.1f, 1000.f);
+// threepp uses GLFW under the hood
+#include <GLFW/glfw3.h>
 
-        // car
-        Car car;
-        car.position.set(-80, 0, 46.6);
-        scene.add(car);
-        canvas.addKeyListener(car);
+using namespace threepp;
 
-        // world
-        World world;
-        scene.add(world);
+int main() {
 
-        // lighting
-        auto ambient = threepp::AmbientLight::create(threepp::Color(0xfff2e0), 0.6);
-        auto directional = threepp::DirectionalLight::create(threepp::Color(0xffe4b5), 1.2);
-        directional->position.set(10, 15, 10);
-        auto fill = threepp::DirectionalLight::create(threepp::Color(0xcfd9ff), 0.3);
-        fill->position.set(-10, 5, -10);
+    // --- threepp setup ---
+    Canvas canvas("Bilsimulator");
+    GLRenderer renderer(canvas.size());
+    renderer.setPixelRatio(monitor::contentScale().first);
 
-        scene.add(ambient);
-        scene.add(directional);
-        scene.add(fill);
+    // ---------- ImGui initialization ----------
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
 
-        float camYawOffset = 0;
-        Clock clock;
-        canvas.animate([&]{
-        float dt = clock.getDelta();
+    // get underlying GLFW window from threepp::Canvas
+    auto* window = static_cast<GLFWwindow*>(canvas.windowPtr());
 
-            // save previous position before moving
-        threepp::Vector3 oldPos = car.position;
-        car.update(dt);
+    ImGui_ImplGlfw_InitForOpenGL(window, /*install_callbacks=*/true);
+    ImGui_ImplOpenGL3_Init("#version 150"); // good on macOS
 
-            // AABB collision
-       {
-           threepp::Box3 carBox = car.getBoundingBox();
-           const auto& colliders = world.getColliders();
+    // --- scene & camera ---
+    Scene scene;
+    scene.background = Color::lightgray;
+    PerspectiveCamera camera(75, canvas.aspect(), 0.1f, 1000.f);
 
-           for (const auto& box : colliders) {
-               if (carBox.intersectsBox(box)) {
-                   car.position = oldPos;
-                   break;
-               }
-           }
-       }
+    // ----------------------------------------------------
+    //  CAR + WORLD
+    // ----------------------------------------------------
+    Car car;
 
-            // powerups
-            {
-    threepp::Box3 carBox = car.getBoundingBox();
-    auto& powerUps = world.getPowerUps();
+    // starting transform (for restart)
+    Vector3 startPos(-80, 0, 46.6);
+    float   startYaw = 0.f;
 
-    for (auto& pu : powerUps) {
-        if (pu.collected) continue;
+    car.position.copy(startPos);
+    car.rotation.y = startYaw;
 
-        if (carBox.intersectsBox(pu.box)) {
-            pu.collected = true;
+    scene.add(car);
+    canvas.addKeyListener(car); // WASD
 
-            if (pu.visual) pu.visual->visible = false;
+    World world;
+    scene.add(world);
 
-            switch (pu.type) {
-                case PowerUp::Type::SpeedX2:
-                    car.applySpeedBoost(1.5, 5);
-                    break;
-                case PowerUp::Type::SizeX2:
-                    car.applySizeBoost(1.5, 5);
-                    break;
+    auto resetGame = [&]() {
+        // reset car
+        car.position.copy(startPos);
+        car.rotation.y = startYaw;
+        car.resetState();
+
+        // reset all powerups in the world
+        auto& powerUps = world.getPowerUps();
+        for (auto& pu : powerUps) {
+            pu.collected = false;
+
+            if (pu.visual) {
+                pu.visual->visible = true;
+
+                // rebuild its trigger box (optional but safe)
+                threepp::Box3 box;
+                box.setFromObject(*pu.visual);
+                pu.box = box;
             }
         }
-    }
-}
+    };
+
+    // ----------------------------------------------------
+    //  LIGHTS
+    // ----------------------------------------------------
+    auto ambient = AmbientLight::create(Color(0xfff2e0), 0.6f);
+    auto directional = DirectionalLight::create(Color(0xffe4b5), 1.2f);
+    directional->position.set(10, 15, 10);
+
+    auto fill = DirectionalLight::create(Color(0xcfd9ff), 0.3f);
+    fill->position.set(-10, 5, -10);
+
+    scene.add(ambient);
+    scene.add(directional);
+    scene.add(fill);
+
+    // ----------------------------------------------------
+    //  RESTART LISTENER (R key)
+    // ----------------------------------------------------
+    struct RestartListener : KeyListener {
+        std::function<void()> resetGame;
+
+        explicit RestartListener(std::function<void()> fn)
+            : resetGame(std::move(fn)) {}
+
+        void onKeyPressed(KeyEvent evt) override {
+            if (evt.key == Key::R) {
+                resetGame();
+            }
+        }
+    };
+
+    RestartListener restartListener(resetGame);
+    canvas.addKeyListener(restartListener);
 
 
+    // ----------------------------------------------------
+    //  CAMERA FOLLOW STATE
+    // ----------------------------------------------------
+    float camYawOffset = 0.f;
 
+    // ----------------------------------------------------
+    //  CLOCK
+    // ----------------------------------------------------
+    Clock clock;
 
-        // camera follow logic
+    // ----------------------------------------------------
+    //  MAIN LOOP
+    // ----------------------------------------------------
+    canvas.animate([&] {
+        float dt = clock.getDelta();
+
+        // -----------------------------
+        //   CAR UPDATE
+        // -----------------------------
+        Vector3 oldPos = car.position;
+        car.update(dt);
+
+        // -----------------------------
+        //   AABB COLLISION (WORLD)
+        // -----------------------------
+        {
+            Box3 carBox = car.getBoundingBox();
+            const auto& colliders = world.getColliders();
+
+            for (const auto& box : colliders) {
+                if (carBox.intersectsBox(box)) {
+                    car.position.copy(oldPos);
+                    break;
+                }
+            }
+        }
+
+        // -----------------------------
+        //   POWERUPS
+        // -----------------------------
+        {
+            Box3 carBox = car.getBoundingBox();
+            auto& powerUps = world.getPowerUps();
+
+            for (auto& pu : powerUps) {
+                if (pu.collected) continue;
+
+                if (carBox.intersectsBox(pu.box)) {
+                    pu.collected = true;
+
+                    if (pu.visual) pu.visual->visible = false;
+
+                    switch (pu.type) {
+                        case PowerUp::Type::SpeedX2:
+                            car.applySpeedBoost(1.5, 5);
+                            break;
+                        case PowerUp::Type::SizeX2:
+                            car.applySizeBoost(1.5, 5);
+                            break;
+                    }
+                }
+            }
+        }
+
+        // -----------------------------
+        //   CAMERA FOLLOW + STEERING OFFSET
+        // -----------------------------
         float steerDir = 0.0f;
         if (car.steeringLeft())  steerDir += 1.0f;
         if (car.steeringRight()) steerDir -= 1.0f;
 
-        // target yaw offset for the camera (in radians)
-        float targetOffset = steerDir * 0.45;
-
-        // smooth the camera yaw offset so it "follows" the steering
-        float followSpeed = 1.5;
+        float targetOffset = steerDir * 0.45f; // yaw offset in radians
+        float followSpeed  = 1.5f;
         camYawOffset += (targetOffset - camYawOffset) * followSpeed * dt;
 
-        // use the car's rotation plus the camera yaw offset
         float camYaw = car.rotation.y + camYawOffset;
 
         camera.position.set(
@@ -111,18 +198,94 @@
             car.position.z + 8 * std::sin(camYaw)
         );
 
-        // look slightly ahead in the direction the car is facing
-        float lookAheadDist = 3;
+        float lookAheadDist = 3.f;
         float forwardX = std::cos(car.rotation.y);
         float forwardZ = -std::sin(car.rotation.y);
 
-        threepp::Vector3 lookTarget(
+        Vector3 lookTarget(
             car.position.x + forwardX * lookAheadDist,
             car.position.y + 1,
             car.position.z + forwardZ * lookAheadDist
         );
 
         camera.lookAt(lookTarget);
+
+        // -----------------------------
+        //   IMGUI FRAME BEGIN
+        // -----------------------------
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+
+        // make sure DisplaySize is valid
+        {
+            auto s = canvas.size();
+            ImGuiIO& io2 = ImGui::GetIO();
+            io2.DisplaySize = ImVec2(
+             static_cast<float>(s.width()),
+             static_cast<float>(s.height())
+            );
+
+        }
+
+        ImGui::NewFrame();
+
+        // -----------------------------
+        //   HUD WINDOW
+        // -----------------------------
+        ImGuiWindowFlags flags =
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoResize   |
+                ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoMove    |
+                ImGuiWindowFlags_NoSavedSettings;
+
+        ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.35f);
+
+        ImGui::Begin("HUD", nullptr, flags);
+
+        // --- Speedometer ---
+        float speed = car.getSpeedAbs();
+        ImGui::Text("Speed: %.1f", speed);
+
+        float maxSpeedVis = 50.f; // adjust to your game
+        float norm = std::min(speed / maxSpeedVis, 1.0f);
+        ImGui::ProgressBar(norm, ImVec2(150, 0), "");
+
+        ImGui::Separator();
+
+        // --- Power-up indicator ---
+        if (car.hasSpeedBoost()) {
+            ImGui::Text("Power-up: SPEED x%.1f", car.getSpeedMultiplier());
+        } else if (car.hasSizeBoost()) {
+            ImGui::Text("Power-up: SIZE x%.1f", car.getSizeMultiplier());
+        } else {
+            ImGui::Text("Power-up: none");
+        }
+
+        ImGui::Separator();
+
+        // --- Restart button ---
+        if (ImGui::Button("Restart (R)")) {
+    resetGame();
+}
+
+
+        ImGui::End();
+
+        // -----------------------------
+        //   RENDER 3D + IMGUI
+        // -----------------------------
         renderer.render(scene, camera);
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     });
-    }
+
+    // ---------- ImGui shutdown ----------
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    return 0;
+}
