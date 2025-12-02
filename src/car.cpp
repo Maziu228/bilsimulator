@@ -14,12 +14,12 @@ Car::Car() {
     carBody->rotation.y = threepp::math::degToRad(90);
     this->add(carBody);
 
-    // Wheel model cloned 4 times
+    // Wheel model
     auto wheelModel = loader.load("assets/cars/simple_car/simple_car_wheels3.obj");
     wheelModel->scale.set(1, 1, 1);
    wheelModel->rotation.y = threepp::math::degToRad(90);
 
-    // Wheels adjustments
+    // Separate wheel adjustments
     threepp::Vector3 wheelOffsets[4] = {
         { 0.9f, -0.1f,  1.1f },  // front left
         {-0.9f, -0.1f,  1.1f },  // front right
@@ -34,7 +34,7 @@ Car::Car() {
         o.z = -oldX;
     }
 
-    // 4 wheels
+    // Clone 4 wheels
     for (int i = 0; i < 4; ++i) {
         auto wheel = wheelModel->clone();
         wheel->position.copy(wheelOffsets[i]);
@@ -86,20 +86,36 @@ void Car::update(float dt) {
 
     // Input
     float steerIn    = (isDPressed ? -1.f : 0.f) + (isAPressed ? 1.f : 0.f);
-    float throttleIn = (isWPressed ? +1.f : 0.f) + (isSPressed ? -1.f : 0.f);
+    bool forward  = isWPressed;
+    bool backward = isSPressed;
 
-    // Speed update
-    if (throttleIn > 0) {
-        currentSpeed += accelRate * speedMultiplier * dt;
-    } else if (throttleIn < 0) {
-        currentSpeed -= accelRate * speedMultiplier * dt;
-    } else {
-        if (currentSpeed > 0) {
-            currentSpeed -= brakeRate * dt;
-            if (currentSpeed < 0) currentSpeed = 0;
-        } else if (currentSpeed < 0) {
+    if (forward && !backward) {
+
+        // Driving specs
+        if (currentSpeed < 0.f) {
             currentSpeed += brakeRate * dt;
-            if (currentSpeed > 0) currentSpeed = 0;
+            if (currentSpeed > 0.f) currentSpeed = 0.f;
+        } else {
+            currentSpeed += accelRate * speedMultiplier * dt;
+        }
+
+    } else if (backward && !forward) {
+
+        if (currentSpeed > 0.f) {
+            currentSpeed -= brakeRate * dt;
+            if (currentSpeed < 0.f) currentSpeed = 0.f;
+        } else {
+            currentSpeed -= accelRate * speedMultiplier * dt;
+        }
+
+    } else {
+        // Slow down
+        if (currentSpeed > 0.f) {
+            currentSpeed -= brakeRate * 0.5f * dt;
+            if (currentSpeed < 0.f) currentSpeed = 0.f;
+        } else if (currentSpeed < 0.f) {
+            currentSpeed += brakeRate * 0.5f * dt;
+            if (currentSpeed > 0.f) currentSpeed = 0.f;
         }
     }
 
@@ -142,7 +158,7 @@ void Car::update(float dt) {
         bool isFront = (i < 2);
         bool isRight = (i == 1 || i == 3);
 
-        // base yaw: 0 for left wheels, 180° for right wheels
+        // base yaw: 0 for left wheels, 180 for right wheels
         float baseYaw = isRight ? threepp::math::degToRad(180) : 0.f;
 
         // front wheels steer around that base yaw, rears just keep base yaw
@@ -158,9 +174,6 @@ void Car::update(float dt) {
     }
 }
 
-
-
-
 // Helpers
 void Car::setW(bool down) { isWPressed = down; }
 void Car::setS(bool down) { isSPressed = down; }
@@ -169,6 +182,8 @@ void Car::setD(bool down) { isDPressed = down; }
 
 bool Car::steeringRight() const { return isDPressed; }
 bool Car::steeringLeft()  const { return isAPressed; }
+
+bool Car::isReversing() const {return currentSpeed < -0.1f;}
 
 threepp::Box3 Car::getBoundingBox() const {
     threepp::Vector3 min(position.x - halfExtents.x,

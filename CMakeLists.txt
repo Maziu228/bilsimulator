@@ -5,9 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
-# =====================================
 # threepp
-# =====================================
 set(THREEPP_BUILD_TESTS OFF)
 set(THREEPP_BUILD_EXAMPLES OFF)
 
@@ -18,9 +16,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(threepp)
 
-# =====================================
-# ImGui (auto-download + OpenGL3/GLFW backend)
-# =====================================
+
+# ImGui auto-download and OpenGL3/GLFW backend
 FetchContent_Declare(
         imgui_src
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -28,9 +25,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui_src)
 
+# Catch2 for unit tests
+FetchContent_Declare(
+        catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.6.0
+)
+FetchContent_MakeAvailable(catch2)
+
 set(IMGUI_DIR ${imgui_src_SOURCE_DIR})
 
-# <-- THIS is the path you just found with `find`
 set(GLFW_INCLUDE_DIR
         ${CMAKE_BINARY_DIR}/_deps/threepp-src/src/external/glfw/include
 )
@@ -48,12 +52,8 @@ add_library(imgui STATIC
 target_include_directories(imgui PUBLIC
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
-        ${GLFW_INCLUDE_DIR}        # <-- makes <GLFW/glfw3.h> work
+        ${GLFW_INCLUDE_DIR}
 )
-
-# =====================================
-# Your game
-# =====================================
 add_executable(bilsimulator
         src/application.cpp
         src/world.cpp
@@ -70,4 +70,18 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/src/assets
         ${CMAKE_BINARY_DIR}/assets
+)
+
+add_executable(bilsimulator_tests
+        src/tests/test_car.cpp
+        src/car.cpp
+)
+
+target_link_libraries(bilsimulator_tests PRIVATE
+        threepp
+        Catch2::Catch2WithMain
+)
+
+target_include_directories(bilsimulator_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
 )

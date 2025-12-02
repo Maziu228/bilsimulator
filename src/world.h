@@ -15,6 +15,7 @@ class World : public threepp::Object3D {
 public:
     World();
 
+    // colliders
     const std::vector<threepp::Box3>& getColliders() const { return colliders_; }
     std::vector<PowerUp>& getPowerUps() { return powerUps_; }
     const std::vector<PowerUp>& getPowerUps() const { return powerUps_;}

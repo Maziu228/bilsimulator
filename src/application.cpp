@@ -3,9 +3,10 @@
 #include <cmath>
 #include <functional>
 
-// Headers
+// Header files
 #include "car.h"
 #include "world.h"
+#include "cmath"
 
 // Imgui
 #include "imgui.h"
@@ -34,7 +35,16 @@ int main() {
 
     Scene scene;
     scene.background = Color::lightgray;
-    PerspectiveCamera camera(75, canvas.aspect(), 0.1f, 1000.f);
+    PerspectiveCamera camera(75, canvas.aspect(), 0.1, 1000);
+
+    canvas.onWindowResize([&](threepp::WindowSize size) {
+    // Update renderer size
+    renderer.setSize(size);
+
+    // Update camera aspect ratio
+    camera.aspect = size.aspect();
+    camera.updateProjectionMatrix();
+});
 
     Car car;
     Vector3 startPos(-80, 0, 46.6); // Start position
@@ -73,11 +83,10 @@ int main() {
     };
 
     // Lights
-    auto ambient = AmbientLight::create(Color(0xfff2e0), 0.6f);
-    auto directional = DirectionalLight::create(Color(0xffe4b5), 1.2f);
+    auto ambient = AmbientLight::create(Color(0xfff2e0), 0.6);
+    auto directional = DirectionalLight::create(Color(0xffe4b5), 1.2);
     directional->position.set(10, 15, 10);
-
-    auto fill = DirectionalLight::create(Color(0xcfd9ff), 0.3f);
+    auto fill = DirectionalLight::create(Color(0xcfd9ff), 0.3);
     fill->position.set(-10, 5, -10);
 
     scene.add(ambient);
@@ -103,7 +112,8 @@ int main() {
 
 
     // Camera state
-    float camYawOffset = 0.f;
+    float camYawOffset = 0;
+    float reverseCamBlend  = 0;
     Clock clock;
 
     // Main loop
@@ -113,8 +123,7 @@ int main() {
         Vector3 oldPos = car.position;
         car.update(dt);
 
-        // AABB collision
-        {
+        {  // AABB collision
             Box3 carBox = car.getBoundingBox();
             const auto& colliders = world.getColliders();
 
@@ -141,10 +150,10 @@ int main() {
 
                     switch (pu.type) {
                         case PowerUp::Type::SpeedX2:
-                            car.applySpeedBoost(1.5, 5);
+                            car.applySpeedBoost(1.5, 5); // Speed 1.5x
                             break;
                         case PowerUp::Type::SizeX2:
-                            car.applySizeBoost(1.5, 5);
+                            car.applySizeBoost(1.5, 5);  // Size 1.5x
                             break;
                     }
                 }
@@ -152,30 +161,55 @@ int main() {
         }
 
         // Following camera
-        float steerDir = 0.0f;
-        if (car.steeringLeft())  steerDir += 1.0f;
-        if (car.steeringRight()) steerDir -= 1.0f;
+        float steerDir = 0;
+        if (car.steeringLeft())  steerDir += 1;
+        if (car.steeringRight()) steerDir -= 1;
 
-        float targetOffset = steerDir * 0.45f;
-        float followSpeed  = 1.5f;
+        float targetOffset = steerDir * 0.45;
+        float followSpeed  = 1.5;
         camYawOffset += (targetOffset - camYawOffset) * followSpeed * dt;
 
-        float camYaw = car.rotation.y + camYawOffset;
+        const float reverseBlendSpeed = 3; // Adjustment for camera flip speed
+        if (car.isReversing()) {
+            reverseCamBlend += reverseBlendSpeed * dt;
+            if (reverseCamBlend > 1) reverseCamBlend = 1;
+        } else {
+            reverseCamBlend -= reverseBlendSpeed * dt;
+            if (reverseCamBlend < 0) reverseCamBlend = 0;
+        }
 
+        // Yaw that follows car and steering
+        float baseCamYaw = car.rotation.y + camYawOffset;
+
+        // Turn camera 180 when reverse
+        const float PI = 3.1415926535;
+        float camYaw = baseCamYaw + reverseCamBlend * PI;
+
+        // Camera position around the car
+        float camDist   = 8;
+        float camHeight = 4;
         camera.position.set(
-            car.position.x - 8 * std::cos(camYaw),
-            car.position.y + 4,
-            car.position.z + 8 * std::sin(camYaw)
+            car.position.x - camDist * std::cos(camYaw),
+            car.position.y + camHeight,
+            car.position.z + camDist * std::sin(camYaw)
         );
 
-        float lookAheadDist = 3.f;
+        // Look direction both for forward and backward
         float forwardX = std::cos(car.rotation.y);
         float forwardZ = -std::sin(car.rotation.y);
 
+        float backX = -forwardX;
+        float backZ = -forwardZ;
+
+        // Blend between forward and backward look direction
+        float dirX = forwardX * (1 - reverseCamBlend) + backX * reverseCamBlend;
+        float dirZ = forwardZ * (1 - reverseCamBlend) + backZ * reverseCamBlend;
+
+        float lookDist = 3;
         Vector3 lookTarget(
-            car.position.x + forwardX * lookAheadDist,
+            car.position.x + dirX * lookDist,
             car.position.y + 1,
-            car.position.z + forwardZ * lookAheadDist
+            car.position.z + dirZ * lookDist
         );
 
         camera.lookAt(lookTarget);
@@ -205,8 +239,8 @@ int main() {
                 ImGuiWindowFlags_NoMove    |
                 ImGuiWindowFlags_NoSavedSettings;
 
-        ImGui::SetNextWindowPos(ImVec2(20.0f, 20.0f), ImGuiCond_Always);
-        ImGui::SetNextWindowBgAlpha(0.35f);
+        ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.35);
 
         ImGui::Begin("HUD", nullptr, flags);
 
@@ -214,7 +248,7 @@ int main() {
         float speed = car.getSpeedAbs();
         ImGui::Text("Speed: %.1f", speed);
 
-        float maxSpeedVis = 50.f;
+        float maxSpeedVis = 50;
         float norm = std::min(speed / maxSpeedVis, 1.0f);
         ImGui::ProgressBar(norm, ImVec2(150, 0), "");
 

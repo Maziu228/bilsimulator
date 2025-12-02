@@ -7,25 +7,26 @@
 World::World() {
     threepp::OBJLoader loader;
     auto road = loader.load("assets/objects/road/RoadNetwork3.obj");
+    road->scale.set(0.65, 0.65, 0.65);
+    road->position.set(-15, -0.4, 0);
+
     auto house = loader.load("assets/objects/buildings/HouseLowPoly2.obj");
-    auto finish = loader.load ("assets/objects/misc/finishLine.obj");
-    auto barrier = loader.load("assets/objects/misc/Barrier.obj");
-
-    auto geometry = threepp::BoxGeometry::create(400, 5, 400);
-    auto material = threepp::MeshStandardMaterial::create();
-
-    material->color = threepp::Color(0xCF9E7C);
-    auto ground = threepp::Mesh::create(geometry, material);
-
-    ground->position.set(0, -3, 0);
     house->scale.set(0.3, 0.3, 0.3);
     house->position.set(10, -0.6, -10);
+
+    auto finish = loader.load ("assets/objects/misc/finishLine.obj");
     finish->scale.set(1.5, 1.5, 1.5);
     finish->position.set(-60, -0.5, 46.6);
     finish->rotation.y= threepp::math::degToRad(90);
+
+    auto barrier = loader.load("assets/objects/misc/Barrier.obj");
     barrier->scale.set(2, 2, 2);
-    road->scale.set(0.65, 0.65, 0.65);
-    road->position.set(-15, -0.4, 0);
+
+    auto geometry = threepp::BoxGeometry::create(400, 5, 400);
+    auto material = threepp::MeshStandardMaterial::create();
+    material->color = threepp::Color(0xCF9E7C);
+    auto ground = threepp::Mesh::create(geometry, material);
+    ground->position.set(0, -3, 0);
 
     this->add(road);
     this->add(ground);
@@ -114,13 +115,5 @@ World::World() {
             pu.visual = mesh.get();
             powerUps_.push_back(pu);
         }
-
-        // check the size of the road model (debug)
-        threepp::Box3 box;
-        box.setFromObject(*road);
-        threepp::Vector3 size;
-        box.getSize(size);
-        std::cout << "Road model size (x, y, z): "
-                  << size.x << ", " << size.y << ", " << size.z << std::endl;
     }
 }

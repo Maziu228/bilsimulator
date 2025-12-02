@@ -22,8 +22,12 @@ public:
     void setA(bool down);
     void setD(bool down);
 
+    // steering helpers
     bool steeringRight() const;
     bool steeringLeft() const;
+
+    // reverse helpers
+    bool isReversing() const;
 
     threepp::Box3 getBoundingBox() const;
 
@@ -35,7 +39,7 @@ public:
     float getSpeedMultiplier() const { return speedMultiplier; }
     float getSizeMultiplier()  const { return sizeMultiplier; }
 
-    // Reset car state (for restart)
+    // Reset car state
     void resetState();
 
 
