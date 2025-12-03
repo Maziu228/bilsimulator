@@ -68,6 +68,7 @@ FetchContent slik at det skal vær mulig å bygge prosjektet på alle systemer.
 
 ## UML Klassediagram
 
+```text
 +-------------------+        +-------------------+
 |       Car         |        |       World       |
 +-------------------+        +-------------------+
@@ -88,13 +89,16 @@ FetchContent slik at det skal vær mulig å bygge prosjektet på alle systemer.
 | - World world;                             |
 | - PerspectiveCamera camera;                |
 | - GLRenderer renderer;                     |
-| +main loop:                                |
+| + main loop:                               |
 |    • update car                            |
 |    • check collisions                      |
 |    • handle powerups                       |
 |    • update camera                         |
 |    • draw UI                               |
 +--------------------------------------------+
+
+```
+
 
 ## Bygging av prosjektet:
 ### Krav
