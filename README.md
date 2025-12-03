@@ -187,7 +187,7 @@ flere powerups osv...
 ## Hjelpemidler og kilder
 
 ### KI
-I dette prosjektet har jeg brukt hjelpemidler som "Clion code suggestion" og ChatGPT(5.1) for å lære og som støtte til:
+I dette prosjektet har jeg brukt hjelpemidler som "Clion code suggestion" og ChatGPT(5.1) for å lære, og som støtte til:
 
 - feilsøking
 - forslag til forbedringer
@@ -215,9 +215,9 @@ Modellene var justert og skalert i Blender før import
 ### Kilder 
 Disse nettsidene ble brukt for å hente informasjon om hvordan forskjellige bibliotek fungerer og hvordan man bruker de. 
 
-https://github.com/markaren/threepp: Brukt for å sjekke ut diverse demoer og koden bak de.
+Brukt for å sjekke ut diverse demoer og koden bak de: https://github.com/markaren/threepp
 
-https://threejs.org/: Brukt for tutorials for threepp
+Brukt for tutorials for threepp: https://threejs.org/
 
 
 
