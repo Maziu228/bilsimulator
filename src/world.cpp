@@ -6,22 +6,28 @@
 
 World::World() {
     threepp::OBJLoader loader;
+
+    // road model
     auto road = loader.load("assets/objects/road/RoadNetwork3.obj");
     road->scale.set(0.65, 0.65, 0.65);
     road->position.set(-15, -0.4, 0);
 
+    // house model
     auto house = loader.load("assets/objects/buildings/HouseLowPoly2.obj");
     house->scale.set(0.3, 0.3, 0.3);
     house->position.set(10, -0.6, -10);
 
+    // finish model
     auto finish = loader.load ("assets/objects/misc/finishLine.obj");
     finish->scale.set(1.5, 1.5, 1.5);
     finish->position.set(-60, -0.5, 46.6);
     finish->rotation.y= threepp::math::degToRad(90);
 
+    // barrier model
     auto barrier = loader.load("assets/objects/misc/Barrier.obj");
     barrier->scale.set(2, 2, 2);
 
+    // ground model
     auto geometry = threepp::BoxGeometry::create(400, 5, 400);
     auto material = threepp::MeshStandardMaterial::create();
     material->color = threepp::Color(0xCF9E7C);
@@ -86,12 +92,12 @@ World::World() {
             PowerUp::Type type;
         };
         std::vector<PowerUpInfo> infos = {
-            { threepp::Vector3(-13.f, 1.f,  -5.f), PowerUp::Type::SpeedX2 },
-            { threepp::Vector3( 80, 1.f, 90), PowerUp::Type::SpeedX2 },
-            { threepp::Vector3( -100, 1.f,80), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3(-13, 1,  -5), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3( 80, 1, 90), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3( -100, 1,80), PowerUp::Type::SpeedX2 },
 
-            { threepp::Vector3(80, 1.f,  40.f), PowerUp::Type::SizeX2 },
-            { threepp::Vector3( -65 , 1.f,  120), PowerUp::Type::SizeX2 },
+            { threepp::Vector3(80, 1,  40), PowerUp::Type::SizeX2 },
+            { threepp::Vector3( -65 , 1,  120), PowerUp::Type::SizeX2 },
         };
 
         for (const auto& info : infos) {

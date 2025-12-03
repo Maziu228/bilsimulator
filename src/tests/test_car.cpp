@@ -5,30 +5,30 @@
 TEST_CASE("Car accelerates forward when W is pressed") {
     Car car;
 
-    // Hold W for some time
-    car.setW(true);
-    for (int i = 0; i < 20; ++i) { // 20 * 0.1s = 2 seconds
-        car.update(0.1f);
-    }
-    car.setW(false);
-
-    REQUIRE(car.getSpeed() > 0.f);    // speed increased
-    REQUIRE(car.getSpeed() <= 30.f);  // not above maxSpeed
-}
-
-TEST_CASE("Car brakes and then reverses when holding S") {
-    Car car;
-
-    // First accelerate forward a bit
+    // Hold W for en stund
     car.setW(true);
     for (int i = 0; i < 20; ++i) {
         car.update(0.1f);
     }
     car.setW(false);
 
-    REQUIRE(car.getSpeed() > 0.f);    // we are moving forward
+    REQUIRE(car.getSpeed() > 0.f);
+    REQUIRE(car.getSpeed() <= 30.f);  // ikke mer enn maxSpeed
+}
 
-    // Now hold S to brake and then reverse
+TEST_CASE("Car brakes and then reverses when holding S") {
+    Car car;
+
+    // Bilen kjører litt frem
+    car.setW(true);
+    for (int i = 0; i < 20; ++i) {
+        car.update(0.1f);
+    }
+    car.setW(false);
+
+    REQUIRE(car.getSpeed() > 0.f);
+
+    // Hold S for brems og reverse deretter
     car.setS(true);
     bool wentNegative = false;
 
@@ -40,8 +40,8 @@ TEST_CASE("Car brakes and then reverses when holding S") {
         }
     }
 
-    REQUIRE(wentNegative);     // eventually moving backwards
-    REQUIRE(car.isReversing()); // helper reports reverse
+    REQUIRE(wentNegative);
+    REQUIRE(car.isReversing());
     car.setS(false);
 }
 

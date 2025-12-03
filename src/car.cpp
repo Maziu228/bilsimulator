@@ -19,7 +19,7 @@ Car::Car() {
     wheelModel->scale.set(1, 1, 1);
    wheelModel->rotation.y = threepp::math::degToRad(90);
 
-    // Separate wheel adjustments
+    // Separate wheel adjustments (4)
     threepp::Vector3 wheelOffsets[4] = {
         { 0.9f, -0.1f,  1.1f },  // front left
         {-0.9f, -0.1f,  1.1f },  // front right
