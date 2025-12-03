@@ -39,6 +39,9 @@ World::World() {
     this->add(house);
     this->add(finish);
 
+// AABB kolisjoner er delvis inspirert av KI (ChatGPT 5.1) for å forstår hvordan den kan brukes
+// Plassering og logikken bak er gjort av meg
+
     // Custom collider for house
     threepp::Box3 houseBox(
     threepp::Vector3(4, -1, -13),

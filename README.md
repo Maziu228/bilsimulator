@@ -178,18 +178,18 @@ flere powerups osv...
 ## Hjelpemidler og kilder
 
 ### KI
-I denne prosjektet har jeg brukt hjelpemidler som "Clion code suggestion" og ChatGPT(5.1) som støtte til:
+I dette prosjektet har jeg brukt hjelpemidler som "Clion code suggestion" og ChatGPT(5.1) for å lære og som støtte til:
 
 - feilsøking
 - forslag til forbedringer
-- kodeutakst
-- koding (catch2,AABB og ImGui, som var nytt for meg)
+- generering av enkelte kodeutkast for ting som er nytt for meg, spesielt:
+- oppsett av Catch2-testfilen (src/tests/test_car.cpp)
+- enkel ImGui-HUD (src/application.cpp)
+- enkel AABB kollisjon  (src/world.cpp)
 
-KI har hjelpet meg med støtte til feilsøking, strukturering og forslag til forbedringer, samt enkelte
-kodeutkast som jeg har tilpasset og integrert selv. Bilfysikk, kamera, lys og implementasjon er utført av meg
-og feilsøkt med KI. Jeg har forstått og sjekket for kvalitet all kode som er i prosjektet.
-
-
+Jeg har tilpasset kodeutkastene til egen struktur og navn, integrert alt manuelt i prosjektet
+og sørget for å forstå koden før jeg har brukt den. Bilfysikk, følge-kamera, lys og implementering av 3D modeller
+er gjort av meg med feilsøking og litt forslag fra KI som støtte.
 
 ### 3D Modeler
 Alle 3D modeller i denne prosjektet er hentet fra nett, de er gratis for å bruke i "non commercial projects".

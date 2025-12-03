@@ -22,6 +22,9 @@ int main() {
     GLRenderer renderer(canvas.size());
     renderer.setPixelRatio(monitor::contentScale().first);
 
+
+    // ImGui HUD er delvis inspirert av KI (ChatGPT 5.1) og er tilpasset prosjektet av meg
+
     // Imgui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

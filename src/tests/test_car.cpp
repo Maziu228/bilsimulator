@@ -1,4 +1,8 @@
-// tests/test_car.cpp
+
+// Denne testfilen er delvis bassert på kode generert med KI (ChatGPT 5.1)
+// Testlogikken og tilpasningene er gjort av meg.
+
+
 #include <catch2/catch_all.hpp>
 #include "car.h"
 
