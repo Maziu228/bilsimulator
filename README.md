@@ -1,4 +1,5 @@
 # 3D Bilsimulator AIS1003
+## Marius Gincul / Kandidatnr:10034
 Dette er min bilsimulator oppgave for AIS1003, laget ved hjelp av threepp bibliotek som er basert på three.js.
 Simulatoren er en verden med diverse 3D modeller som f.eks. hindringer, hus, og bil. Brukeren selv
 styrer bilen ved hjelp av tastatur, og ser omkring med en kamera som følger bilens retning. Man kan krasje
@@ -113,6 +114,10 @@ FetchContent slik at det skal vær mulig å bygge prosjektet på alle systemer.
 cmake -S . -B build
 
 cmake --build build
+
+#### Eller:
+
+I Clion velg konfigurasjon "bilsimulator" og kjør
 
 #### Kjør programmet:
 

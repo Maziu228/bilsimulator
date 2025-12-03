@@ -6,7 +6,6 @@
 // Header files
 #include "car.h"
 #include "world.h"
-#include "cmath"
 
 // Imgui
 #include "imgui.h"
@@ -143,15 +142,15 @@ int main() {
             Box3 carBox = car.getBoundingBox();
             auto& powerUps = world.getPowerUps();
 
-            for (auto& pu : powerUps) {
-                if (pu.collected) continue;
+            for (auto& PU : powerUps) {
+                if (PU.collected) continue;
 
-                if (carBox.intersectsBox(pu.box)) {
-                    pu.collected = true;
+                if (carBox.intersectsBox(PU.box)) {
+                    PU.collected = true;
 
-                    if (pu.visual) pu.visual->visible = false;
+                    if (PU.visual) PU.visual->visible = false;
 
-                    switch (pu.type) {
+                    switch (PU.type) {
                         case PowerUp::Type::SpeedX2:
                             car.applySpeedBoost(1.5, 5); // Speed 1.5x
                             break;
@@ -172,7 +171,7 @@ int main() {
         float followSpeed  = 1.5;
         camYawOffset += (targetOffset - camYawOffset) * followSpeed * dt;
 
-        const float reverseBlendSpeed = 3; // Adjustment for camera flip speed
+        const float reverseBlendSpeed = 3;
         if (car.isReversing()) {
             reverseCamBlend += reverseBlendSpeed * dt;
             if (reverseCamBlend > 1) reverseCamBlend = 1;
@@ -251,7 +250,7 @@ int main() {
         float speed = car.getSpeedAbs();
         ImGui::Text("Speed: %.1f", speed);
 
-        float maxSpeedVis = 50;
+        float maxSpeedVis = 45;
         float norm = std::min(speed / maxSpeedVis, 1.0f);
         ImGui::ProgressBar(norm, ImVec2(150, 0), "");
 

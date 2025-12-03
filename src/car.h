@@ -5,6 +5,7 @@
 class Car : public threepp::Object3D, public threepp::KeyListener {
 public:
     Car();
+
     // input handlers
     void onKeyPressed(threepp::KeyEvent evt) override;
     void onKeyReleased(threepp::KeyEvent evt) override;
@@ -44,12 +45,13 @@ public:
 
 
 private:
-    // car state and parameters
-    float currentSpeed      = 0.f;
-    float maxSpeed          = 30.f;
-    float maxReverseSpeed   = 10.f;
-    float accelRate         = 8.f;
-    float brakeRate         = 15.f;
+
+    // Car state and parameters
+    float currentSpeed      = 0;
+    float maxSpeed          = 30;
+    float maxReverseSpeed   = 10;
+    float accelRate         = 8;
+    float brakeRate         = 15;
 
     bool isWPressed = false;
     bool isSPressed = false;
@@ -57,15 +59,17 @@ private:
     bool isDPressed = false;
 
     // car collider box
-    threepp::Vector3 halfExtents {1.f, 0.5f, 2.f};
+    threepp::Vector3 halfExtents {1, 0.5, 2};
 
     // powerup state
-    float speedMultiplier = 1.f;
-    float speedBoostTime  = 0.f;
+    float speedMultiplier = 1;
+    float speedBoostTime  = 0;
 
-    float sizeMultiplier  = 1.f;
-    float sizeBoostTime   = 0.f;
+    float sizeMultiplier  = 1;
+    float sizeBoostTime   = 0;
 
+
+    // initial wheels speed (0)
     std::vector<threepp::Object3D*> wheels_;
-    float wheelRotation_ = 0.f;
+    float wheelRotation_ = 0;
 };

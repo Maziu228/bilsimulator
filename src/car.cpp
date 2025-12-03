@@ -21,12 +21,12 @@ Car::Car() {
 
     // Separate wheel adjustments (4)
     threepp::Vector3 wheelOffsets[4] = {
-        { 0.9f, -0.1f,  1.1f },  // front left
-        {-0.9f, -0.1f,  1.1f },  // front right
-        { 0.9f, -0.1f, -1.1f },  // back left
-        {-0.9f, -0.1f, -1.1f },  // back right
+        { 0.9, -0.1,  1.1 },  // front left
+        {-0.9, -0.1,  1.1 },  // front right
+        { 0.9, -0.1, -1.1 },  // back left
+        {-0.9, -0.1, -1.1 },  // back right
     };
-
+    // Fix wheels position
     for (auto& o : wheelOffsets) {
         float oldX = o.x;
         float oldZ = o.z;
@@ -34,12 +34,12 @@ Car::Car() {
         o.z = -oldX;
     }
 
-    // Clone 4 wheels
+    // Clone the wheel 4 times
     for (int i = 0; i < 4; ++i) {
         auto wheel = wheelModel->clone();
         wheel->position.copy(wheelOffsets[i]);
 
-        // Mirror right wheels
+        // Mirror right wheels so all the wheels are not looking same direction
         bool isRight = (i == 1 || i == 3);
         if (isRight) {
             wheel->rotation.y = threepp::math::degToRad(180);
@@ -69,53 +69,53 @@ void Car::onKeyReleased(threepp::KeyEvent evt) {
 void Car::update(float dt) {
 
     // Powerup timers
-    if (speedBoostTime > 0.f) {
+    if (speedBoostTime > 0) {
         speedBoostTime -= dt;
-        if (speedBoostTime <= 0.f) {
+        if (speedBoostTime <= 0) {
             speedMultiplier = 1;
         }
     }
 
-    if (sizeBoostTime > 0.f) {
+    if (sizeBoostTime > 0) {
         sizeBoostTime -= dt;
-        if (sizeBoostTime <= 0.f) {
-            sizeMultiplier = 1.f;
-            this->scale.set(1.f, 1.f, 1.f);
+        if (sizeBoostTime <= 0) {
+            sizeMultiplier = 1;
+            this->scale.set(1, 1, 1);
         }
     }
 
     // Input
-    float steerIn    = (isDPressed ? -1.f : 0.f) + (isAPressed ? 1.f : 0.f);
+    float steerIn    = (isDPressed ? -1 : 0) + (isAPressed ? 1 : 0);
     bool forward  = isWPressed;
     bool backward = isSPressed;
 
     if (forward && !backward) {
 
         // Driving specs
-        if (currentSpeed < 0.f) {
+        if (currentSpeed < 0) {
             currentSpeed += brakeRate * dt;
-            if (currentSpeed > 0.f) currentSpeed = 0.f;
+            if (currentSpeed > 0) currentSpeed = 0;
         } else {
             currentSpeed += accelRate * speedMultiplier * dt;
         }
 
     } else if (backward && !forward) {
 
-        if (currentSpeed > 0.f) {
+        if (currentSpeed > 0) {
             currentSpeed -= brakeRate * dt;
-            if (currentSpeed < 0.f) currentSpeed = 0.f;
+            if (currentSpeed < 0) currentSpeed = 0;
         } else {
             currentSpeed -= accelRate * speedMultiplier * dt;
         }
 
     } else {
         // Slow down
-        if (currentSpeed > 0.f) {
-            currentSpeed -= brakeRate * 0.5f * dt;
-            if (currentSpeed < 0.f) currentSpeed = 0.f;
-        } else if (currentSpeed < 0.f) {
-            currentSpeed += brakeRate * 0.5f * dt;
-            if (currentSpeed > 0.f) currentSpeed = 0.f;
+        if (currentSpeed > 0) {
+            currentSpeed -= brakeRate * 0.5 * dt;
+            if (currentSpeed < 0) currentSpeed = 0;
+        } else if (currentSpeed < 0) {
+            currentSpeed += brakeRate * 0. * dt;
+            if (currentSpeed > 0) currentSpeed = 0;
         }
     }
 
@@ -126,11 +126,11 @@ void Car::update(float dt) {
     if (currentSpeed < -maxReverseSpeed * speedMultiplier)
         currentSpeed = -maxReverseSpeed * speedMultiplier;
 
-    // Speed and position
-    const float wheelbase = 2.5f;
-    float maxSteer = 0.6f;
+    // Handling settings
+    const float wheelbase = 2.5;
+    float maxSteer = 0.6;
 
-    if (currentSpeed > maxSteer * 30.f) maxSteer *= 0.5f;
+    if (currentSpeed > maxSteer * 30) maxSteer *= 0.5;
 
     float turningRadius = std::tan(steerIn * maxSteer) / wheelbase;
 
@@ -140,9 +140,9 @@ void Car::update(float dt) {
     this->position.z += std::sin(rotation.y) * -currentSpeed * dt;
 
     // Wheels rotation and steering
-    const float wheelRadius = 0.35f;
+    const float wheelRadius = 0.35;
 
-    float angularSpeed = (wheelRadius > 0.f)
+    float angularSpeed = (wheelRadius > 0)
         ? currentSpeed / wheelRadius
         : 0.f;
 
@@ -158,16 +158,16 @@ void Car::update(float dt) {
         bool isFront = (i < 2);
         bool isRight = (i == 1 || i == 3);
 
-        // base yaw: 0 for left wheels, 180 for right wheels
+        // Base yaw: 0 for left wheels 180 for right wheels
         float baseYaw = isRight ? threepp::math::degToRad(180) : 0.f;
 
-        // front wheels steer around that base yaw, rears just keep base yaw
+        // Front wheels turn around base yaw, back wheels stay still
         if (isFront) {
             w->rotation.y = steerAngle + baseYaw;
         } else {
             w->rotation.y = baseYaw;
         }
-
+        // Wheel rotation direction (visual)
         float angle = wheelRotation_;
         if (isRight) angle = -angle;
         w->rotation.z = angle;
@@ -183,7 +183,7 @@ void Car::setD(bool down) { isDPressed = down; }
 bool Car::steeringRight() const { return isDPressed; }
 bool Car::steeringLeft()  const { return isAPressed; }
 
-bool Car::isReversing() const {return currentSpeed < -0.1f;}
+bool Car::isReversing() const {return currentSpeed < -0.1;}
 
 threepp::Box3 Car::getBoundingBox() const {
     threepp::Vector3 min(position.x - halfExtents.x,
@@ -196,27 +196,28 @@ threepp::Box3 Car::getBoundingBox() const {
 
     return threepp::Box3(min, max);
 }
-
+// Speed boost
 void Car::applySpeedBoost(float factor, float duration) {
     speedMultiplier = factor;
     speedBoostTime  = duration;
 }
-
+// Size boost
 void Car::applySizeBoost(float factor, float duration) {
     sizeMultiplier = factor;
     sizeBoostTime  = duration;
     this->scale.set(factor, factor, factor);
 }
 
+// Car states when reseted
 void Car::resetState() {
-    currentSpeed    = 0.f;
+    currentSpeed    = 0;
 
-    speedMultiplier = 1.f;
-    speedBoostTime  = 0.f;
+    speedMultiplier = 1;
+    speedBoostTime  = 0;
 
-    sizeMultiplier  = 1.f;
-    sizeBoostTime   = 0.f;
+    sizeMultiplier  = 1;
+    sizeBoostTime   = 0;
 
-    this->scale.set(1.f, 1.f, 1.f); // removes size boost
+    this->scale.set(1, 1, 1); // removes size boost
 }
 

@@ -17,7 +17,7 @@ TEST_CASE("Car accelerates forward when W is pressed") {
     car.setW(false);
 
     REQUIRE(car.getSpeed() > 0.f);
-    REQUIRE(car.getSpeed() <= 30.f);  // ikke mer enn maxSpeed
+    REQUIRE(car.getSpeed() <= 30.f);
 }
 
 TEST_CASE("Car brakes and then reverses when holding S") {

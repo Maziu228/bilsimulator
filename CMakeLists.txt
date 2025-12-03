@@ -39,6 +39,7 @@ set(GLFW_INCLUDE_DIR
         ${CMAKE_BINARY_DIR}/_deps/threepp-src/src/external/glfw/include
 )
 
+# imGui library download
 add_library(imgui STATIC
         ${IMGUI_DIR}/imgui.cpp
         ${IMGUI_DIR}/imgui_draw.cpp
@@ -65,6 +66,7 @@ target_link_libraries(bilsimulator PUBLIC
         imgui
 )
 
+# copy assets folder to cmake build
 add_custom_command(
         TARGET bilsimulator POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

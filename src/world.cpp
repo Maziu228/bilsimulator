@@ -43,11 +43,11 @@ World::World() {
 // Plassering og logikken bak er gjort av meg
 
     // Custom collider for house
-    threepp::Box3 houseBox(
+    threepp::Box3 houseColider(
     threepp::Vector3(4, -1, -13),
     threepp::Vector3(16, 3, -7)
 );
-    colliders_.push_back(houseBox);
+    colliders_.push_back(houseColider);
 
     // Barricade placements: position + rotation
     struct BarricadeInfo {
@@ -56,50 +56,49 @@ World::World() {
     };
 
     std::vector<BarricadeInfo> barricades = {
-        //  x      y   z       yaw
-        { threepp::Vector3(70, 0.f, 46),   0 },
-        { threepp::Vector3(167, 0.f, 4),  60 },
-        { threepp::Vector3(82, 0.f, 120),  95 },
-        { threepp::Vector3(0, 0.f, 140), 90},
-        { threepp::Vector3(-117, 0.f, 140), 90},
-        { threepp::Vector3(-15, 0.f, -20), 90},
+        { threepp::Vector3(70, 0, 46),   0 },
+        { threepp::Vector3(167, 0, 4),  60 },
+        { threepp::Vector3(82, 0, 120),  95 },
+        { threepp::Vector3(0, 0, 140), 90},
+        { threepp::Vector3(-117, 0, 140), 90},
+        { threepp::Vector3(-15, 0, -20), 90},
     };
 
     for (const auto& info : barricades) {
         // clone visual model
-        auto b = barrier->clone();
-        b->position.copy(info.pos);
-        b->rotation.y = threepp::math::degToRad(info.yawDeg);
+        auto bar = barrier->clone();
+        bar->position.copy(info.pos);
+        bar->rotation.y = threepp::math::degToRad(info.yawDeg);
 
-        this->add(b);
+        this->add(bar);
 
         // colliders for barricades
         threepp::Box3 box;
-        box.setFromObject(*b);
+        box.setFromObject(*bar);
         colliders_.push_back(box);
     }
 
     // Power ups
     {
         // visual mesh
-        auto speedGeo = threepp::SphereGeometry::create(0.7f, 16, 16);
-        auto speedMat = threepp::MeshStandardMaterial::create();
-        speedMat->color = threepp::Color(0xffff00);
+        auto speedPU = threepp::SphereGeometry::create(0.7, 16, 16);
+        auto speedCOL = threepp::MeshStandardMaterial::create();
+        speedCOL->color = threepp::Color(0xffff00); // yellow
 
-        auto sizeGeo = threepp::SphereGeometry::create(0.7, 16, 16);
-        auto sizeMat = threepp::MeshStandardMaterial::create();
-        sizeMat->color = threepp::Color(0x00ffff);
+        auto sizePU = threepp::SphereGeometry::create(0.7, 16, 16);
+        auto sizeCOL = threepp::MeshStandardMaterial::create();
+        sizeCOL->color = threepp::Color(0x00ffff); // cyan
 
         struct PowerUpInfo {
             threepp::Vector3 pos;
             PowerUp::Type type;
         };
         std::vector<PowerUpInfo> infos = {
-            { threepp::Vector3(-13, 1,  -5), PowerUp::Type::SpeedX2 },
+            { threepp::Vector3(-13, 1,  -5), PowerUp::Type::SpeedX2 },  // position for speed power ups
             { threepp::Vector3( 80, 1, 90), PowerUp::Type::SpeedX2 },
             { threepp::Vector3( -100, 1,80), PowerUp::Type::SpeedX2 },
 
-            { threepp::Vector3(80, 1,  40), PowerUp::Type::SizeX2 },
+            { threepp::Vector3(80, 1,  40), PowerUp::Type::SizeX2 },    // position for size power ups
             { threepp::Vector3( -65 , 1,  120), PowerUp::Type::SizeX2 },
         };
 
@@ -107,9 +106,9 @@ World::World() {
             std::shared_ptr<threepp::Mesh> mesh;
 
             if (info.type == PowerUp::Type::SpeedX2) {
-                mesh = threepp::Mesh::create(speedGeo, speedMat);
-            } else { // SizeX2
-                mesh = threepp::Mesh::create(sizeGeo, sizeMat);
+                mesh = threepp::Mesh::create(speedPU, speedCOL); // speed
+            } else {
+                mesh = threepp::Mesh::create(sizePU, sizeCOL);  // size
             }
 
             mesh->position.copy(info.pos);
@@ -118,11 +117,11 @@ World::World() {
             threepp::Box3 box;
             box.setFromObject(*mesh);
 
-            PowerUp pu;
-            pu.type   = info.type;
-            pu.box    = box;
-            pu.visual = mesh.get();
-            powerUps_.push_back(pu);
+            PowerUp PU;
+            PU.type   = info.type;
+            PU.box    = box;
+            PU.visual = mesh.get();
+            powerUps_.push_back(PU);
         }
     }
 }
